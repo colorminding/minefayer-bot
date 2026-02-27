@@ -1,0 +1,11 @@
+{
+  "name": "mineflayer-bot",
+  "version": "1.0.0",
+  "main": "bot.js",
+  "dependencies": {
+    "mineflayer": "^4.0.0",
+    "prismarine-auth": "^2.0.0",
+    "mineflayer-pathfinder": "^2.0.0",
+    "vec3": "^0.1.0"
+  }
+}
