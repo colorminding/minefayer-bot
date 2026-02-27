@@ -1,0 +1,6 @@
+{
+  "queue": [
+    { "type": "afk", "everyMs": 5000 }
+  ],
+  "active": null
+}
