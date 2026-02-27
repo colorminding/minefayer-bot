@@ -23,7 +23,7 @@ const { Vec3 } = require('vec3')
 
 /* ===================== CONFIG ===================== */
 const CFG = {
-  host: process.env.MC_HOST || '127.0.0.1',
+  host: process.env.MC_HOST || 'server.colorminding.de',
   port: Number(process.env.MC_PORT || 25565),
   version: process.env.MC_VERSION || '1.21.1',
   username: process.env.MC_USER || 'email@example.com',
