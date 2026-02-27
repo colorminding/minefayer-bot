@@ -14,7 +14,7 @@
  * ATTACK_EVERY_MS=600
  * ATTACK_TYPES=mob (or: mob,player)  // usually keep "mob"
  */
-
+require('dotenv').config()
 const fs = require('fs')
 const path = require('path')
 const mineflayer = require('mineflayer')
