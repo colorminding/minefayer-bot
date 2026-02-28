@@ -1,5 +1,4 @@
 {
-  "watch": ["bot.js", "state.json"],
-  "ignore": ["profiles/**", "node_modules/**", ".git/**"],
-  "delay": "500"
+  "watch": ["bot.js"],
+  "ignore": ["**/*"]
 }
