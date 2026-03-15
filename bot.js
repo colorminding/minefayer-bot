@@ -382,17 +382,27 @@ async function taskLeftClickLoop (t) {
   const everyMs = t.everyMs ?? CFG.leftClickEveryMs
   console.log(`🔨 Raw left-click loop (every ${everyMs}ms)…`)
 
+  let isDigging = false
+
   setManagedInterval(() => {
     try {
       bot.swingArm('right')
       
-      // Get block in the direction bot is currently looking - does not change orientation
-      const blockAtCursor = bot.blockAtCursor(256)
-      if (blockAtCursor) {
-        bot.dig(blockAtCursor, 'ignore')
+      // Only start digging if not already digging
+      if (!isDigging) {
+        const blockAtCursor = bot.blockAtCursor(256)
+        if (blockAtCursor) {
+          isDigging = true
+          bot.dig(blockAtCursor, 'ignore').then(() => {
+            isDigging = false
+          }).catch(() => {
+            isDigging = false
+          })
+        }
       }
     } catch (e) {
-      // Silently ignore errors (no block, etc.)
+      isDigging = false
+      // Silently ignore errors
     }
   }, everyMs)
 
