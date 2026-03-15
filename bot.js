@@ -1,108 +1,111 @@
 /**
- * Minecraft Bot using minecraft-protocol + prismarine-auth
- * Holds rightclick continuously and leftclick every 1.6 seconds
- * Microsoft account authentication
+ * Minecraft Bot using Mineflayer
+ * Constantly drinks from offhand potion
+ * Attacks armor stands every 550ms
  * 
  * ENV:
- * MC_HOST, MC_PORT, MC_VERSION, MC_USER (email), PROFILES_DIR
+ * MC_HOST, MC_PORT, MC_VERSION, MC_USER (email), PROFILES_DIR, MC_AUTH (microsoft/offline)
  */
 require('dotenv').config()
-const mc = require('minecraft-protocol')
-const { Authflow } = require('prismarine-auth')
-const fs = require('fs')
-const path = require('path')
+const mineflayer = require('mineflayer')
 
 const CFG = {
   host: process.env.MC_HOST || 'server.colorminding.de',
   port: Number(process.env.MC_PORT || 25566),
   version: process.env.MC_VERSION || '1.21.1',
-  email: process.env.MC_USER || 'test@example.com',
-  profilesDir: process.env.PROFILES_DIR || './profiles'
+  username: process.env.MC_USER || 'test@example.com',
+  auth: process.env.MC_AUTH || 'microsoft',
+  profilesFolder: process.env.PROFILES_DIR || './profiles'
 }
 
-let client = null
-let rightClickInterval = null
-let leftClickInterval = null
+let bot = null
+let drinkInterval = null
+let attackInterval = null
+let cameraLockInterval = null
 
-async function startBot () {
-  console.log('🟦 Authenticating with Microsoft…')
+function startBot () {
+  console.log('🟦 Starting Mineflayer bot…')
 
-  try {
-    // Ensure profiles directory exists
-    if (!fs.existsSync(CFG.profilesDir)) {
-      fs.mkdirSync(CFG.profilesDir, { recursive: true })
-    }
+  bot = mineflayer.createBot({
+    host: CFG.host,
+    port: CFG.port,
+    version: CFG.version,
+    username: CFG.username,
+    auth: CFG.auth,
+    profilesFolder: CFG.profilesFolder
+  })
 
-    // Create authflow for Microsoft login
-    const authflow = new Authflow(CFG.email, CFG.profilesDir)
-    const { token, profile } = await authflow.authenticate()
+  bot.once('spawn', () => {
+    console.log('✅ Bot joined.')
+    startActions()
+  })
 
-    console.log(`✅ Authenticated as ${profile.name}`)
+  bot.on('kicked', (reason) => {
+    console.log('⛔ Kicked:', reason)
+  })
 
-    client = mc.createClient({
-      host: CFG.host,
-      port: CFG.port,
-      version: CFG.version,
-      username: profile.name,
-      auth: 'microsoft',
-      accessToken: token,
-      profile: profile
-    })
+  bot.on('error', (err) => {
+    console.log('⚠️ Error:', err.message)
+  })
 
-    client.on('login', () => {
-      console.log('✅ Bot joined server.')
-      startClicking()
-    })
-
-    client.on('error', (err) => {
-      console.log('⚠️ Connection Error:', err.message)
-    })
-
-    client.on('end', () => {
-      console.log('🔌 Disconnected.')
-      if (rightClickInterval) clearInterval(rightClickInterval)
-      if (leftClickInterval) clearInterval(leftClickInterval)
-      process.exit(0)
-    })
-
-    client.on('kick_disconnect', (reason) => {
-      console.log('⛔ Kicked:', reason)
-    })
-
-    client.on('disconnect', (packet) => {
-      console.log('📴 Server closed connection:', packet.reason)
-    })
-  } catch (err) {
-    console.log('❌ Authentication failed:', err.message)
-    process.exit(1)
-  }
+  bot.on('end', () => {
+    console.log('🔌 Disconnected.')
+    if (drinkInterval) clearInterval(drinkInterval)
+    if (attackInterval) clearInterval(attackInterval)
+    if (cameraLockInterval) clearInterval(cameraLockInterval)
+    process.exit(0)
+  })
 }
 
-function startClicking () {
-  if (rightClickInterval) clearInterval(rightClickInterval)
-  if (leftClickInterval) clearInterval(leftClickInterval)
+function startActions () {
+  if (drinkInterval) clearInterval(drinkInterval)
+  if (attackInterval) clearInterval(attackInterval)
+  if (cameraLockInterval) clearInterval(cameraLockInterval)
 
-  // Hold rightclick continuously (every 50ms) - send block place packet
-  rightClickInterval = setInterval(() => {
+  // Continuously drink from offhand (rightclick)
+  drinkInterval = setInterval(() => {
     try {
-      client.write('block_place', {
-        location: { x: 0, y: 0, z: 0 },
-        direction: 0,
-        hand: 1
-      })
+      if (!bot || !bot.entity) return
+      bot.activateItem()
     } catch (e) {}
   }, 50)
 
-  // Leftclick every 1.6 seconds - send arm animation packet
-  leftClickInterval = setInterval(() => {
+  // Lock camera angle to fixed coordinates every 50ms
+  cameraLockInterval = setInterval(() => {
     try {
-      client.write('arm_animation', {
-        hand: 0
-      })
+      if (!bot || !bot.entity) return
+      // Set to desired angles (yaw, pitch)
+      bot.look(-74.1, -136.2, false)
     } catch (e) {}
-  }, 1600)
+  }, 50)
 
-  console.log('🎮 Bot started: holding rightclick (offhand), leftclick every 1.6s (mainhand)')
+  // Attack nearby armor stands every 550ms
+  attackInterval = setInterval(() => {
+    try {
+      if (!bot || !bot.entity) return
+
+      // Find nearest armor stand
+      let target = null
+      let minDistance = Infinity
+
+      for (const entity of Object.values(bot.entities)) {
+        if (entity.name !== 'armor_stand') continue
+
+        const distance = bot.entity.position.distanceTo(entity.position)
+        if (distance < minDistance && distance < 10) {
+          minDistance = distance
+          target = entity
+        }
+      }
+
+      // Attack the target
+      if (target) {
+        bot.attack(target)
+      }
+    } catch (e) {}
+  }, 550)
+
+  console.log('🎮 Bot started: drinking from offhand, locking camera, attacking armor stands every 550ms')
 }
 
 startBot()

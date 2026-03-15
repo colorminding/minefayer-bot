@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "main": "bot.js",
   "dependencies": {
-    "minecraft-protocol": "^1.50.0",
-    "prismarine-auth": "^2.7.0",
+    "mineflayer": "^4.0.0",
     "dotenv": "^16.0.0"
   }
 }
