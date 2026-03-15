@@ -30,6 +30,7 @@ let attackInterval = null
 let holdInterval = null
 let lastLoggedYaw = null
 let lastLoggedPitch = null
+let startTime = Date.now()
 
 function startBot () {
   console.log('🟦 Starting bot…')
@@ -86,9 +87,10 @@ function startBot () {
     if (bot.entity) {
       const currentYaw = Math.round(bot.entity.yaw * 100) / 100
       const currentPitch = Math.round(bot.entity.pitch * 100) / 100
+      const elapsed = Date.now() - startTime
       
       if (lastLoggedYaw !== currentYaw || lastLoggedPitch !== currentPitch) {
-        console.log(`📷 MOVE event: [${lastLoggedYaw}, ${lastLoggedPitch}] → [${currentYaw}, ${currentPitch}]`)
+        console.log(`[${elapsed}ms] 📷 MOVE event: [${lastLoggedYaw}, ${lastLoggedPitch}] → [${currentYaw}, ${currentPitch}]`)
         lastLoggedYaw = currentYaw
         lastLoggedPitch = currentPitch
       }
@@ -113,6 +115,8 @@ function startAttacking () {
   holdInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
+      const elapsed = Date.now() - startTime
+      console.log(`[${elapsed}ms] 🖱️  activateItem() - before angle: [${Math.round(bot.entity.yaw * 100) / 100}, ${Math.round(bot.entity.pitch * 100) / 100}]`)
       bot.activateItem()
     } catch (e) {}
   }, 50)
@@ -123,6 +127,7 @@ function startAttacking () {
       if (!bot || !bot.entity) return
       const beforeYaw = Math.round(bot.entity.yaw * 100) / 100
       const beforePitch = Math.round(bot.entity.pitch * 100) / 100
+      const elapsed = Date.now() - startTime
       
       bot.look(CFG.yaw, CFG.pitch, false)
       
@@ -130,7 +135,7 @@ function startAttacking () {
       const afterPitch = Math.round(bot.entity.pitch * 100) / 100
       
       if (beforeYaw !== CFG.yaw || beforePitch !== CFG.pitch) {
-        console.log(`🔄 look() called: before [${beforeYaw}, ${beforePitch}] → target [${CFG.yaw}, ${CFG.pitch}]`)
+        console.log(`[${elapsed}ms] 🔄 look() called: before [${beforeYaw}, ${beforePitch}] → target [${CFG.yaw}, ${CFG.pitch}]`)
       }
     } catch (e) {}
   }, 500)
@@ -145,9 +150,10 @@ function startAttacking () {
       const currentPitch = Math.round(bot.entity.pitch * 100) / 100
       const yawDrift = Math.abs(currentYaw - CFG.yaw)
       const pitchDrift = Math.abs(currentPitch - CFG.pitch)
+      const elapsed = Date.now() - startTime
       
       if (yawDrift > 0.5 || pitchDrift > 0.5) {
-        console.log(`⚠️  DRIFT DETECTED: current [${currentYaw}, ${currentPitch}] vs target [${CFG.yaw}, ${CFG.pitch}] (Δ${yawDrift.toFixed(2)}, Δ${pitchDrift.toFixed(2)})`)
+        console.log(`[${elapsed}ms] ⚠️  DRIFT DETECTED: current [${currentYaw}, ${currentPitch}] vs target [${CFG.yaw}, ${CFG.pitch}] (Δ${yawDrift.toFixed(2)}, Δ${pitchDrift.toFixed(2)})`)
       }
     } catch (e) {}
   }, 1000)
