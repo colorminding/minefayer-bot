@@ -27,6 +27,7 @@ const CFG = {
 
 let bot = null
 let attackInterval = null
+let holdInterval = null
 
 function startBot () {
   console.log('🟦 Starting bot…')
@@ -52,6 +53,7 @@ function startBot () {
   bot.on('end', () => {
     console.log('🔌 Disconnected.')
     if (attackInterval) clearInterval(attackInterval)
+    if (holdInterval) clearInterval(holdInterval)
     
     if (CFG.exitOnDisconnect) {
       process.exit(1)
@@ -62,16 +64,25 @@ function startBot () {
 }
 
 function startAutoAttack () {
-  if (attackInterval) clearInterval(attackInterval)
+  if (holdInterval) clearInterval(holdInterval)
   
-  // Set camera angle once at start
-  bot.look(CFG.yaw, CFG.pitch, true)
-  
-  attackInterval = setInterval(() => {
+  // Fast loop: maintain look angle and hold rightclick every tick
+  holdInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
       
-      // Hold rightclick
+      // Keep camera angle fixed
+      bot.look(CFG.yaw, CFG.pitch, false)
+      
+      // Hold rightclick continuously
+      bot.activateItem()
+    } catch (e) {}
+  }, 50)
+  
+  // Attack loop: swing and attack on interval
+  attackInterval = setInterval(() => {
+    try {
+      if (!bot || !bot.entity) return
       bot.activateItem(false)
       
       bot.swingArm('right')
