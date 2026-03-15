@@ -27,6 +27,7 @@ const CFG = {
 
 let bot = null
 let attackInterval = null
+let cameraLockInterval = null
 
 function startBot () {
   console.log('🟦 Starting bot…')
@@ -51,6 +52,7 @@ function startBot () {
   bot.on('end', () => {
     console.log('🔌 Disconnected.')
     if (attackInterval) clearInterval(attackInterval)
+    if (cameraLockInterval) clearInterval(cameraLockInterval)
     
     if (CFG.exitOnDisconnect) {
       process.exit(1)
@@ -62,12 +64,39 @@ function startBot () {
 
 function startAttacking () {
   if (attackInterval) clearInterval(attackInterval)
+  if (cameraLockInterval) clearInterval(cameraLockInterval)
   
-  // Attack loop: swing attack on interval
+  // Camera lock: refresh every 50ms to maintain angle
+  cameraLockInterval = setInterval(() => {
+    try {
+      if (!bot || !bot.entity) return
+      bot.look(CFG.yaw, CFG.pitch, false)
+    } catch (e) {}
+  }, 50)
+  
+  // Attack loop: find nearest entity and attack it
   attackInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
-      bot.swingArm('right')
+      
+      // Find nearest entity (excluding the bot itself)
+      let target = null
+      let minDistance = Infinity
+      
+      for (const entity of Object.values(bot.entities)) {
+        if (entity.type === 'object' || entity.type === 'player') continue
+        
+        const distance = bot.entity.position.distanceTo(entity.position)
+        if (distance < minDistance && distance < 50) {
+          minDistance = distance
+          target = entity
+        }
+      }
+      
+      // Attack the target
+      if (target) {
+        bot.attack(target)
+      }
     } catch (e) {}
   }, CFG.attackIntervalMs)
 }
