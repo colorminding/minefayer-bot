@@ -16,11 +16,11 @@ const CFG = {
   auth: process.env.MC_AUTH || 'microsoft',
   profilesFolder: process.env.PROFILES_DIR || './profiles',
   
-  attackIntervalMs: Number(process.env.ATTACK_INTERVAL_MS || 650),
+  attackIntervalMs: Number(process.env.ATTACK_INTERVAL_MS || 2000),
   
   // Fixed camera angles
-  yaw: 136.2,
-  pitch: -74.1,
+  yaw: -74.1,
+  pitch: -136.2,
   
   exitOnDisconnect: (process.env.EXIT_ON_DISCONNECT || '1') === '1'
 }
