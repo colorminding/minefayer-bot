@@ -27,10 +27,6 @@ const CFG = {
 
 let bot = null
 let attackInterval = null
-let holdInterval = null
-let lastLoggedYaw = null
-let lastLoggedPitch = null
-let startTime = Date.now()
 
 function startBot () {
   console.log('🟦 Starting bot…')
@@ -46,24 +42,6 @@ function startBot () {
 
   bot.once('spawn', () => {
     console.log('✅ Bot joined.')
-    
-    // Intercept incoming packets that might reset camera
-    const origRead = bot._client.on.bind(bot._client)
-    bot._client.on = function(event, cb) {
-      if (event === 'packet') {
-        return origRead(event, (packet) => {
-          if (packet.data) {
-            const packetName = packet.data.name || packet.name
-            if (packetName === 'entity_look' || packetName === 'player_look' || packetName === 'entity_head_rotation') {
-              console.log(`📥 Incoming packet (${packetName}):`, { yaw: packet.data.yaw, pitch: packet.data.pitch })
-            }
-          }
-          cb(packet)
-        })
-      }
-      return origRead(event, cb)
-    }
-    
     startAttacking()
   })
 
@@ -73,7 +51,6 @@ function startBot () {
   bot.on('end', () => {
     console.log('🔌 Disconnected.')
     if (attackInterval) clearInterval(attackInterval)
-    if (holdInterval) clearInterval(holdInterval)
     
     if (CFG.exitOnDisconnect) {
       process.exit(1)
@@ -81,71 +58,10 @@ function startBot () {
       process.exit(1)
     }
   })
-
-  // Debug: Monitor ALL move events (camera changes)
-  bot.on('move', () => {
-    if (bot.entity) {
-      const currentYaw = Math.round(bot.entity.yaw * 100) / 100
-      const currentPitch = Math.round(bot.entity.pitch * 100) / 100
-      const elapsed = Date.now() - startTime
-      
-      if (lastLoggedYaw !== currentYaw || lastLoggedPitch !== currentPitch) {
-        console.log(`[${elapsed}ms] 📷 MOVE event: [${lastLoggedYaw}, ${lastLoggedPitch}] → [${currentYaw}, ${currentPitch}]`)
-        lastLoggedYaw = currentYaw
-        lastLoggedPitch = currentPitch
-      }
-    }
-  })
-
-  // Catch position_look packets from server (these might reset camera)
-  const origWrite = bot._client.write
-  bot._client.write = function(packet, ...args) {
-    if (packet.name === 'position_look' || packet.name === 'player_look') {
-      console.log(`📡 Server packet (${packet.name}):`, packet)
-    }
-    return origWrite.call(this, packet, ...args)
-  }
 }
 
 function startAttacking () {
   if (attackInterval) clearInterval(attackInterval)
-  if (holdInterval) clearInterval(holdInterval)
-  
-  // Hold rightclick loop
-  holdInterval = setInterval(() => {
-    try {
-      if (!bot || !bot.entity) return
-      bot.activateItem()
-    } catch (e) {}
-  }, 50)
-  
-  // Camera lock: refresh every 50ms (same rate as hold) to prevent server reset
-  let cameraLockInterval = setInterval(() => {
-    try {
-      if (!bot || !bot.entity) return
-      bot.look(CFG.yaw, CFG.pitch, false)
-    } catch (e) {}
-  }, 50)
-  
-  intervals.push(cameraLockInterval)
-  
-  // Monitor angle drift every second
-  let monitorInterval = setInterval(() => {
-    try {
-      if (!bot || !bot.entity) return
-      const currentYaw = Math.round(bot.entity.yaw * 100) / 100
-      const currentPitch = Math.round(bot.entity.pitch * 100) / 100
-      const yawDrift = Math.abs(currentYaw - CFG.yaw)
-      const pitchDrift = Math.abs(currentPitch - CFG.pitch)
-      const elapsed = Date.now() - startTime
-      
-      if (yawDrift > 0.5 || pitchDrift > 0.5) {
-        console.log(`[${elapsed}ms] ⚠️  DRIFT DETECTED: current [${currentYaw}, ${currentPitch}] vs target [${CFG.yaw}, ${CFG.pitch}] (Δ${yawDrift.toFixed(2)}, Δ${pitchDrift.toFixed(2)})`)
-      }
-    } catch (e) {}
-  }, 1000)
-  
-  intervals.push(monitorInterval)
   
   // Attack loop: swing attack on interval
   attackInterval = setInterval(() => {
@@ -155,8 +71,6 @@ function startAttacking () {
     } catch (e) {}
   }, CFG.attackIntervalMs)
 }
-
-let intervals = []
 
 startBot()
 
