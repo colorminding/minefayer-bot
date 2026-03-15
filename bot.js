@@ -35,7 +35,7 @@ async function startBot () {
 
     // Create authflow for Microsoft login
     const authflow = new Authflow(CFG.email, CFG.profilesDir)
-    const { token, profile } = await authflow.getMinecraftToken()
+    const { token, profile } = await authflow.authenticate()
 
     console.log(`✅ Authenticated as ${profile.name}`)
 
@@ -45,7 +45,7 @@ async function startBot () {
       version: CFG.version,
       username: profile.name,
       auth: 'microsoft',
-      accessToken: token.access_token,
+      accessToken: token,
       profile: profile
     })
 
