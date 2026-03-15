@@ -385,13 +385,11 @@ async function taskLeftClickLoop (t) {
       bot.swingArm('right')
       bot.dig()
     } catch (e) {
-      console.log('⚠lc-raw [interval_ms]  (raw left-click loop)`,
-      `${CFG.prefix}️ Left-click error:', e?.message || e)
+      console.log('⚠️ Left-click error:', e?.message || e)
     }
   }, everyMs)
 
   await new Promise(() => {})
-} await new Promise(() => {})
 }
 
 /* ===================== CHAT COMMANDS ===================== */
