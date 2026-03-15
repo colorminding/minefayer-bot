@@ -20,8 +20,8 @@ const CFG = {
 
 let bot = null
 let drinkInterval = null
-let lastAttackTick = 0
-const ATTACK_INTERVAL_TICKS = 11  // 550ms = 11 ticks (20 ticks/sec)
+let tickCounter = 0
+const ATTACK_INTERVAL_TICKS = 11  // 550ms ≈ 11 ticks (20 ticks/sec)
 
 function startBot () {
   console.log('🟦 Starting Mineflayer bot…')
@@ -41,10 +41,11 @@ function startBot () {
     // Attack on game ticks instead of real-time (scales with server speed)
     bot.on('tick', () => {
       try {
+        tickCounter++
+        
         if (!bot || !bot.entity) return
         
-        const currentTick = bot.world.time.age
-        if (currentTick - lastAttackTick >= ATTACK_INTERVAL_TICKS) {
+        if (tickCounter >= ATTACK_INTERVAL_TICKS) {
           // Find nearest armor stand
           let target = null
           let minDistance = Infinity
@@ -62,8 +63,9 @@ function startBot () {
           // Attack the target
           if (target) {
             bot.attack(target)
-            lastAttackTick = currentTick
           }
+          
+          tickCounter = 0
         }
       } catch (e) {}
     })
