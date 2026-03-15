@@ -107,8 +107,4 @@ function startAttacking () {
 }
 
 startBot()
-  }, CFG.attackIntervalMs)
-}
-
-startBot()
 
