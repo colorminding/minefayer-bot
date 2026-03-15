@@ -78,7 +78,7 @@ function startAttacking () {
   let cameraLockInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
-      bot.look(CFG.yaw, CFG.pitch, true)
+      bot.look(136.2, -74.1, true)
     } catch (e) {}
   }, 500)
   
