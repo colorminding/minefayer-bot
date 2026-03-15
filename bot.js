@@ -62,7 +62,7 @@ function startClicking () {
       client.write('block_place', {
         location: { x: 0, y: 0, z: 0 },
         direction: 0,
-        hand: 0
+        hand: 1
       })
     } catch (e) {}
   }, 50)
@@ -74,7 +74,7 @@ function startClicking () {
         hand: 0
       })
     } catch (e) {}
-  }, 551)
+  }, 550)
 
   console.log('🎮 Bot started: holding rightclick, leftclick every 1.6s')
 }
