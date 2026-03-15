@@ -58,15 +58,12 @@ function startActions () {
   if (drinkInterval) clearInterval(drinkInterval)
   if (attackInterval) clearInterval(attackInterval)
 
-  // Continuously drink from offhand (rightclick) - use raw packet to avoid angle reset
+  // Continuously drink from offhand (rightclick) - use mineflayer's built-in method
   drinkInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
-      // Send use_item packet directly (1 = off-hand)
-      bot._client.write('use_item', {
-        hand: 1,
-        cursor_position: { x: 0.5, y: 0.5 }
-      })
+      // Use the off-hand item (potion)
+      bot.activateItem(false)
     } catch (e) {}
   }, 50)
 
