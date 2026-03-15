@@ -18,6 +18,10 @@ const CFG = {
   
   attackIntervalMs: Number(process.env.ATTACK_INTERVAL_MS || 650),
   
+  // Fixed camera angles
+  yaw: 74.1,
+  pitch: 136.2,
+  
   exitOnDisconnect: (process.env.EXIT_ON_DISCONNECT || '1') === '1'
 }
 
@@ -62,7 +66,7 @@ function startAttacking () {
   if (attackInterval) clearInterval(attackInterval)
   if (holdInterval) clearInterval(holdInterval)
   
-  // Fast loop: hold rightclick and maintain current camera angle
+  // Fast loop: hold rightclick and maintain fixed camera angle
   holdInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
@@ -70,8 +74,8 @@ function startAttacking () {
       // Hold rightclick continuously
       bot.activateItem()
       
-      // Maintain current look angle (prevents server from resetting it)
-      bot.look(bot.entity.yaw, bot.entity.pitch, false)
+      // Maintain fixed look angle
+      bot.look(CFG.yaw, CFG.pitch, false)
     } catch (e) {}
   }, 50)
   
