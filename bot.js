@@ -386,16 +386,10 @@ async function taskLeftClickLoop (t) {
     try {
       bot.swingArm('right')
       
-      // Try to find and attack entity at cursor
-      const block = bot.blockAtCursor(256)
-      if (block) {
-        bot.dig(block, 'ignore').catch(() => {})
-      } else {
-        // Try attacking entity if no block
-        const entity = bot.entityAtCursor(256)
-        if (entity && entity !== bot.entity) {
-          bot.attack(entity)
-        }
+      // Attack entity at cursor only (no block digging)
+      const entity = bot.entityAtCursor(256)
+      if (entity && entity !== bot.entity) {
+        bot.attack(entity)
       }
     } catch (e) {
       // Silently ignore errors
