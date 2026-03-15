@@ -64,7 +64,8 @@ function startActions () {
       if (!bot || !bot.entity) return
       // Send use_item packet directly (1 = off-hand)
       bot._client.write('use_item', {
-        hand: 1
+        hand: 1,
+        cursor_position: { x: 0.5, y: 0.5 }
       })
     } catch (e) {}
   }, 50)
