@@ -46,6 +46,8 @@ function startBot () {
         if (!bot || !bot.entity) return
         
         if (tickCounter >= ATTACK_INTERVAL_TICKS) {
+          console.log(`🕐 Tick attack: entities=${Object.keys(bot.entities).length}, counter=${tickCounter}`)
+          
           // Find nearest armor stand
           let target = null
           let minDistance = Infinity
@@ -62,12 +64,17 @@ function startBot () {
 
           // Attack the target
           if (target) {
+            console.log(`🎯 Attacking armor stand at distance ${minDistance.toFixed(1)}`)
             bot.attack(target)
+          } else {
+            console.log('❌ No armor stand found')
           }
           
           tickCounter = 0
         }
-      } catch (e) {}
+      } catch (e) {
+        console.log('⚠️ Tick error:', e.message)
+      }
     })
     
     startActions()
