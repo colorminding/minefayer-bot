@@ -74,7 +74,7 @@ function startClicking () {
         hand: 0
       })
     } catch (e) {}
-  }, 550)
+  }, 551)
 
   console.log('🎮 Bot started: holding rightclick, leftclick every 1.6s')
 }
