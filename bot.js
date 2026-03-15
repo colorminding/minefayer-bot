@@ -19,7 +19,7 @@ const CFG = {
   attackIntervalMs: Number(process.env.ATTACK_INTERVAL_MS || 2000),
   
   // Fixed camera angles
-  yaw: -74.1,
+  yaw: 74.1,
   pitch: -136.2,
   
   exitOnDisconnect: (process.env.EXIT_ON_DISCONNECT || '1') === '1'
