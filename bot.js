@@ -66,13 +66,23 @@ function startAttacking () {
   if (attackInterval) clearInterval(attackInterval)
   if (holdInterval) clearInterval(holdInterval)
   
-  // Fast loop: hold rightclick 
+  // Hold rightclick loop
   holdInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
       bot.activateItem()
     } catch (e) {}
   }, 50)
+  
+  // Slower camera lock: refresh every 500ms to prevent reset without spinning
+  let cameraLockInterval = setInterval(() => {
+    try {
+      if (!bot || !bot.entity) return
+      bot.look(CFG.yaw, CFG.pitch, false)
+    } catch (e) {}
+  }, 500)
+  
+  intervals.push(cameraLockInterval)
   
   // Attack loop: swing attack on interval
   attackInterval = setInterval(() => {
@@ -82,6 +92,8 @@ function startAttacking () {
     } catch (e) {}
   }, CFG.attackIntervalMs)
 }
+
+let intervals = []
 
 startBot()
 
