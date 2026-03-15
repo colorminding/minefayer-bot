@@ -20,7 +20,7 @@ const CFG = {
   
   // Fixed camera angles
   yaw: 74.1,
-  pitch: -136.2,
+  pitch: 136.2,
   
   exitOnDisconnect: (process.env.EXIT_ON_DISCONNECT || '1') === '1'
 }
