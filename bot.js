@@ -382,26 +382,22 @@ async function taskLeftClickLoop (t) {
   const everyMs = t.everyMs ?? CFG.leftClickEveryMs
   console.log(`🔨 Raw left-click loop (every ${everyMs}ms)…`)
 
-  let isDigging = false
-
-  setManagedInterval(() => {
+  const id = setManagedInterval(() => {
     try {
       bot.swingArm('right')
       
-      // Only start digging if not already digging
-      if (!isDigging) {
-        const blockAtCursor = bot.blockAtCursor(256)
-        if (blockAtCursor) {
-          isDigging = true
-          bot.dig(blockAtCursor, 'ignore').then(() => {
-            isDigging = false
-          }).catch(() => {
-            isDigging = false
-          })
+      // Try to find and attack entity at cursor
+      const block = bot.blockAtCursor(256)
+      if (block) {
+        bot.dig(block, 'ignore').catch(() => {})
+      } else {
+        // Try attacking entity if no block
+        const entity = bot.entityAtCursor(256)
+        if (entity && entity !== bot.entity) {
+          bot.attack(entity)
         }
       }
     } catch (e) {
-      isDigging = false
       // Silently ignore errors
     }
   }, everyMs)
