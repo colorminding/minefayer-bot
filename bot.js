@@ -12,7 +12,7 @@ const mineflayer = require('mineflayer')
 const CFG = {
   host: process.env.MC_HOST || 'server.colorminding.de',
   port: Number(process.env.MC_PORT || 25566),
-  version: process.env.MC_VERSION || '1.21.1',
+  version: process.env.MC_VERSION || '1.21.10',
   username: process.env.MC_USER || 'test@example.com',
   auth: process.env.MC_AUTH || 'microsoft',
   profilesFolder: process.env.PROFILES_DIR || './profiles'
