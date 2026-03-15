@@ -144,10 +144,9 @@ function onChat (username, message) {
   }
   
   if (cmd === '!help') {
-    bot.chat('Commands: !speed <ms>, !angle <yaw> <pitch>, !angle off
-    bot.chat(`⚔️ Attack speed set to ${newInterval}ms`)
+    bot.chat('Commands: !speed <ms>, !angle <yaw> <pitch>, !angle off, !help')
   }
-  
+}
   if (cmd === '!help') {
     bot.chat('Commands: !speed <ms> (set attack interval), !help')
   }
