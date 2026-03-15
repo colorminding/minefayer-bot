@@ -20,7 +20,8 @@ const CFG = {
 
 let bot = null
 let drinkInterval = null
-let attackInterval = null
+let lastAttackTick = 0
+const ATTACK_INTERVAL_TICKS = 11  // 550ms = 11 ticks (20 ticks/sec)
 
 function startBot () {
   console.log('🟦 Starting Mineflayer bot…')
@@ -36,6 +37,37 @@ function startBot () {
 
   bot.once('spawn', () => {
     console.log('✅ Bot joined.')
+    
+    // Attack on game ticks instead of real-time (scales with server speed)
+    bot.on('tick', () => {
+      try {
+        if (!bot || !bot.entity) return
+        
+        const currentTick = bot.world.time.age
+        if (currentTick - lastAttackTick >= ATTACK_INTERVAL_TICKS) {
+          // Find nearest armor stand
+          let target = null
+          let minDistance = Infinity
+
+          for (const entity of Object.values(bot.entities)) {
+            if (entity.name !== 'armor_stand') continue
+
+            const distance = bot.entity.position.distanceTo(entity.position)
+            if (distance < minDistance && distance < 10) {
+              minDistance = distance
+              target = entity
+            }
+          }
+
+          // Attack the target
+          if (target) {
+            bot.attack(target)
+            lastAttackTick = currentTick
+          }
+        }
+      } catch (e) {}
+    })
+    
     startActions()
   })
 
@@ -50,14 +82,12 @@ function startBot () {
   bot.on('end', () => {
     console.log('🔌 Disconnected.')
     if (drinkInterval) clearInterval(drinkInterval)
-    if (attackInterval) clearInterval(attackInterval)
     process.exit(0)
   })
 }
 
 function startActions () {
   if (drinkInterval) clearInterval(drinkInterval)
-  if (attackInterval) clearInterval(attackInterval)
 
   // Continuously drink from offhand (rightclick) - use raw packet to avoid angle reset
   drinkInterval = setInterval(() => {
@@ -72,33 +102,7 @@ function startActions () {
     } catch (e) {}
   }, 50)
 
-  // Attack nearby armor stands every 550ms
-  attackInterval = setInterval(() => {
-    try {
-      if (!bot || !bot.entity) return
-
-      // Find nearest armor stand
-      let target = null
-      let minDistance = Infinity
-
-      for (const entity of Object.values(bot.entities)) {
-        if (entity.name !== 'armor_stand') continue
-
-        const distance = bot.entity.position.distanceTo(entity.position)
-        if (distance < minDistance && distance < 10) {
-          minDistance = distance
-          target = entity
-        }
-      }
-
-      // Attack the target
-      if (target) {
-        bot.attack(target)
-      }
-    } catch (e) {}
-  }, 550)
-
-  console.log('🎮 Bot started: drinking from offhand, attacking armor stands every 550ms')
+  console.log('🎮 Bot started: drinking from offhand, attacking armor stands every 11 ticks (scales with server speed)')
 }
 
 startBot()
