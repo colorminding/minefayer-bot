@@ -21,7 +21,6 @@ const CFG = {
 let bot = null
 let drinkInterval = null
 let attackInterval = null
-let cameraLockInterval = null
 
 function startBot () {
   console.log('🟦 Starting Mineflayer bot…')
@@ -52,7 +51,6 @@ function startBot () {
     console.log('🔌 Disconnected.')
     if (drinkInterval) clearInterval(drinkInterval)
     if (attackInterval) clearInterval(attackInterval)
-    if (cameraLockInterval) clearInterval(cameraLockInterval)
     process.exit(0)
   })
 }
@@ -60,22 +58,12 @@ function startBot () {
 function startActions () {
   if (drinkInterval) clearInterval(drinkInterval)
   if (attackInterval) clearInterval(attackInterval)
-  if (cameraLockInterval) clearInterval(cameraLockInterval)
 
   // Continuously drink from offhand (rightclick)
   drinkInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
       bot.activateItem()
-    } catch (e) {}
-  }, 50)
-
-  // Lock camera angle to fixed coordinates every 50ms
-  cameraLockInterval = setInterval(() => {
-    try {
-      if (!bot || !bot.entity) return
-      // Set to desired angles (yaw, pitch)
-      bot.look(-74.1, -136.2, false)
     } catch (e) {}
   }, 50)
 
@@ -105,7 +93,7 @@ function startActions () {
     } catch (e) {}
   }, 550)
 
-  console.log('🎮 Bot started: drinking from offhand, locking camera, attacking armor stands every 550ms')
+  console.log('🎮 Bot started: drinking from offhand, attacking armor stands every 550ms')
 }
 
 startBot()
