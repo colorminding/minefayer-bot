@@ -18,9 +18,9 @@ const CFG = {
   // Attack interval: 625ms is max sword speed, but add buffer for sweeping edge (650ms+ recommended)
   attackIntervalMs: 650,
   
-  // Camera angles (yaw, pitch)
-  // yaw: 74.1,
-  // pitch: 136.2,
+  // Camera angles (yaw, pitch) - set these to lock camera
+  yaw: null,
+  pitch: null,
   
   exitOnDisconnect: (process.env.EXIT_ON_DISCONNECT || '1') === '1'
 }
@@ -67,13 +67,18 @@ function startAutoAttack () {
   if (attackInterval) clearInterval(attackInterval)
   if (holdInterval) clearInterval(holdInterval)
   
-  // Fast loop: hold rightclick every tick
+  // Fast loop: hold rightclick and maintain camera angle if locked
   holdInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
       
       // Hold rightclick continuously
       bot.activateItem()
+      
+      // Keep camera angle locked if set
+      if (CFG.yaw !== null && CFG.pitch !== null) {
+        bot.look(CFG.yaw, CFG.pitch, false)
+      }
     } catch (e) {}
   }, 50)
   
@@ -96,11 +101,7 @@ function startAutoAttack () {
 }
 
 function onChat (username, message) {
-  if (username === bot.username) return
-  
-  const parts = message.trim().split(/\s+/)
-  const cmd = parts[0].toLowerCase()
-  const arg1 = parts[1]
+  const arg2 = parts[2]
   
   if (cmd === '!speed' || cmd === '!attack') {
     if (!arg1 || isNaN(arg1)) {
@@ -116,6 +117,34 @@ function onChat (username, message) {
     
     CFG.attackIntervalMs = newInterval
     startAutoAttack()
+    bot.chat(`⚔️ Attack speed set to ${newInterval}ms`)
+  }
+  
+  if (cmd === '!angle' || cmd === '!lock') {
+    if (!arg1 || !arg2) {
+      bot.chat(`Current lock: Yaw: ${CFG.yaw}, Pitch: ${CFG.pitch}. Usage: !angle <yaw> <pitch> or !angle off`)
+      return
+    }
+    
+    if (arg1.toLowerCase() === 'off') {
+      CFG.yaw = null
+      CFG.pitch = null
+      bot.chat('👀 Camera lock disabled')
+      return
+    }
+    
+    if (isNaN(arg1) || isNaN(arg2)) {
+      bot.chat('Invalid values. Usage: !angle <yaw> <pitch>')
+      return
+    }
+    
+    CFG.yaw = Number(arg1)
+    CFG.pitch = Number(arg2)
+    bot.chat(`👀 Camera locked to Yaw: ${CFG.yaw}, Pitch: ${CFG.pitch}`)
+  }
+  
+  if (cmd === '!help') {
+    bot.chat('Commands: !speed <ms>, !angle <yaw> <pitch>, !angle off
     bot.chat(`⚔️ Attack speed set to ${newInterval}ms`)
   }
   
