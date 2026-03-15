@@ -1,109 +1,82 @@
 /**
- * Simple Mineflayer Bot: Hold rightclick + swing attacks
+ * Minecraft Bot using minecraft-protocol
+ * Holds rightclick continuously and leftclick every 1.6 seconds
  * 
  * ENV:
- * MC_HOST, MC_PORT, MC_VERSION, MC_USER, MC_AUTH=microsoft, PROFILES_DIR=./profiles
- * ATTACK_INTERVAL_MS=550 (attack swing interval, default 650ms)
+ * MC_HOST, MC_PORT, MC_VERSION, MC_USER, MC_AUTH
  */
 require('dotenv').config()
-const mineflayer = require('mineflayer')
+const mc = require('minecraft-protocol')
 
 const CFG = {
   host: process.env.MC_HOST || 'server.colorminding.de',
   port: Number(process.env.MC_PORT || 25566),
-  version: process.env.MC_VERSION || '1.21.1',
+  version: process.env.MC_VERSION || '1.21.10',
   username: process.env.MC_USER || 'email@example.com',
-  auth: process.env.MC_AUTH || 'microsoft',
-  profilesFolder: process.env.PROFILES_DIR || './profiles',
-  
-  attackIntervalMs: Number(process.env.ATTACK_INTERVAL_MS || 2000),
-  
-  exitOnDisconnect: (process.env.EXIT_ON_DISCONNECT || '1') === '1'
+  auth: process.env.MC_AUTH || 'offline'
 }
 
-let bot = null
-let attackInterval = null
-let hadBadOmen = false
+let client = null
+let rightClickInterval = null
+let leftClickInterval = null
 
 function startBot () {
-  console.log('🟦 Starting bot…')
+  console.log('🟦 Connecting to bot…')
 
-  bot = mineflayer.createBot({
+  client = mc.createClient({
     host: CFG.host,
     port: CFG.port,
     version: CFG.version,
     username: CFG.username,
-    auth: CFG.auth,
-    profilesFolder: CFG.profilesFolder
+    auth: CFG.auth === 'offline' ? 'offline' : 'microsoft'
   })
 
-  bot.once('spawn', () => {
+  client.on('login', () => {
     console.log('✅ Bot joined.')
-    
-    // Monitor for bad omen effect loss and drink potion
-    const effectCheckInterval = setInterval(() => {
-      try {
-        if (!bot || !bot.entity) return
-        
-        const badOmenEffect = bot.entity.effects[31] // Bad Omen effect ID
-        const hasBadOmen = badOmenEffect !== undefined
-        
-        // If bot had bad omen but now doesn't, drink potion
-        if (hadBadOmen && !hasBadOmen) {
-          console.log('🍺 Bad omen lost! Drinking potion from off-hand...')
-          bot.activateItem()
-        }
-        
-        hadBadOmen = hasBadOmen
-      } catch (e) {}
-    }, 100)
-    
-    startAttacking()
+    startClicking()
   })
 
-  bot.on('kicked', r => console.log('⛔ Kicked:', r))
-  bot.on('error', e => console.log('⚠️ Error:', e?.message || e))
+  client.on('error', (err) => {
+    console.log('⚠️ Error:', err.message)
+  })
 
-  bot.on('end', () => {
+  client.on('end', () => {
     console.log('🔌 Disconnected.')
-    if (attackInterval) clearInterval(attackInterval)
-    
-    if (CFG.exitOnDisconnect) {
-      process.exit(1)
-    } else {
-      process.exit(1)
-    }
+    if (rightClickInterval) clearInterval(rightClickInterval)
+    if (leftClickInterval) clearInterval(leftClickInterval)
+    process.exit(0)
+  })
+
+  client.on('kick_disconnect', (reason) => {
+    console.log('⛔ Kicked:', reason)
   })
 }
 
-function startAttacking () {
-  if (attackInterval) clearInterval(attackInterval)
-  
-  // Attack loop: find nearest entity and attack it
-  attackInterval = setInterval(() => {
+function startClicking () {
+  if (rightClickInterval) clearInterval(rightClickInterval)
+  if (leftClickInterval) clearInterval(leftClickInterval)
+
+  // Hold rightclick continuously (every 50ms) - send block place packet
+  rightClickInterval = setInterval(() => {
     try {
-      if (!bot || !bot.entity) return
-      
-      // Find nearest entity (excluding the bot itself)
-      let target = null
-      let minDistance = Infinity
-      
-      for (const entity of Object.values(bot.entities)) {
-        if (entity.type === 'object' || entity.type === 'player') continue
-        
-        const distance = bot.entity.position.distanceTo(entity.position)
-        if (distance < minDistance && distance < 50) {
-          minDistance = distance
-          target = entity
-        }
-      }
-      
-      // Attack the target
-      if (target) {
-        bot.attack(target)
-      }
+      client.write('block_place', {
+        location: { x: 0, y: 0, z: 0 },
+        direction: 0,
+        hand: 0
+      })
     } catch (e) {}
-  }, CFG.attackIntervalMs)
+  }, 50)
+
+  // Leftclick every 1.6 seconds - send arm animation packet
+  leftClickInterval = setInterval(() => {
+    try {
+      client.write('arm_animation', {
+        hand: 0
+      })
+    } catch (e) {}
+  }, 1600)
+
+  console.log('🎮 Bot started: holding rightclick, leftclick every 1.6s')
 }
 
 startBot()
