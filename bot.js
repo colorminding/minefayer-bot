@@ -62,10 +62,8 @@ function startActions () {
   drinkInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
-      // Send block_place packet directly (1 = off-hand)
-      bot._client.write('block_place', {
-        location: { x: 0, y: 0, z: 0 },
-        direction: 0,
+      // Send use_item packet directly (1 = off-hand)
+      bot._client.write('use_item', {
         hand: 1
       })
     } catch (e) {}
