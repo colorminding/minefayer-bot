@@ -119,24 +119,13 @@ function startAttacking () {
     } catch (e) {}
   }, 50)
   
-  // Slower camera lock: refresh every 500ms to prevent reset without spinning
+  // Camera lock: refresh every 50ms (same rate as hold) to prevent server reset
   let cameraLockInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
-      const beforeYaw = Math.round(bot.entity.yaw * 100) / 100
-      const beforePitch = Math.round(bot.entity.pitch * 100) / 100
-      const elapsed = Date.now() - startTime
-      
       bot.look(CFG.yaw, CFG.pitch, false)
-      
-      const afterYaw = Math.round(bot.entity.yaw * 100) / 100
-      const afterPitch = Math.round(bot.entity.pitch * 100) / 100
-      
-      if (beforeYaw !== CFG.yaw || beforePitch !== CFG.pitch) {
-        console.log(`[${elapsed}ms] 🔄 look() called: before [${beforeYaw}, ${beforePitch}] → target [${CFG.yaw}, ${CFG.pitch}]`)
-      }
     } catch (e) {}
-  }, 500)
+  }, 50)
   
   intervals.push(cameraLockInterval)
   
