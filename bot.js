@@ -3,7 +3,7 @@
  * 
  * ENV:
  * MC_HOST, MC_PORT, MC_VERSION, MC_USER, MC_AUTH=microsoft, PROFILES_DIR=./profiles
- * ATTACK_INTERVAL_MS=650 (attack swing interval, default 650ms)
+ * ATTACK_INTERVAL_MS=550 (attack swing interval, default 650ms)
  */
 require('dotenv').config()
 const mineflayer = require('mineflayer')
