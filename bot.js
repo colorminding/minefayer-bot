@@ -66,16 +66,11 @@ function startAttacking () {
   if (attackInterval) clearInterval(attackInterval)
   if (holdInterval) clearInterval(holdInterval)
   
-  // Fast loop: hold rightclick and maintain fixed camera angle
+  // Fast loop: hold rightclick 
   holdInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
-      
-      // Hold rightclick continuously
       bot.activateItem()
-      
-      // Maintain fixed look angle
-      bot.look(CFG.yaw, CFG.pitch, false)
     } catch (e) {}
   }, 50)
   
