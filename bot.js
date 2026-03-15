@@ -19,8 +19,8 @@ const CFG = {
   attackIntervalMs: 650,
   
   // Camera angles (yaw, pitch)
-  yaw: 74.1,
-  pitch: 136.2,
+  // yaw: 74.1,
+  // pitch: 136.2,
   
   exitOnDisconnect: (process.env.EXIT_ON_DISCONNECT || '1') === '1'
 }
@@ -64,15 +64,13 @@ function startBot () {
 }
 
 function startAutoAttack () {
+  if (attackInterval) clearInterval(attackInterval)
   if (holdInterval) clearInterval(holdInterval)
   
-  // Fast loop: maintain look angle and hold rightclick every tick
+  // Fast loop: hold rightclick every tick
   holdInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
-      
-      // Keep camera angle fixed
-      bot.look(CFG.yaw, CFG.pitch, false)
       
       // Hold rightclick continuously
       bot.activateItem()
@@ -83,7 +81,6 @@ function startAutoAttack () {
   attackInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
-      bot.activateItem(false)
       
       bot.swingArm('right')
       
@@ -104,7 +101,6 @@ function onChat (username, message) {
   const parts = message.trim().split(/\s+/)
   const cmd = parts[0].toLowerCase()
   const arg1 = parts[1]
-  const arg2 = parts[2]
   
   if (cmd === '!speed' || cmd === '!attack') {
     if (!arg1 || isNaN(arg1)) {
@@ -123,20 +119,8 @@ function onChat (username, message) {
     bot.chat(`⚔️ Attack speed set to ${newInterval}ms`)
   }
   
-  if (cmd === '!angle' || cmd === '!look') {
-    if (!arg1 || !arg2 || isNaN(arg1) || isNaN(arg2)) {
-      bot.chat(`Current angles - Yaw: ${CFG.yaw}, Pitch: ${CFG.pitch}. Usage: !angle <yaw> <pitch>`)
-      return
-    }
-    
-    CFG.yaw = Number(arg1)
-    CFG.pitch = Number(arg2)
-    bot.look(CFG.yaw, CFG.pitch, true)
-    bot.chat(`👀 Camera set to Yaw: ${CFG.yaw}, Pitch: ${CFG.pitch}`)
-  }
-  
   if (cmd === '!help') {
-    bot.chat('Commands: !speed <ms> (set attack interval), !angle <yaw> <pitch> (set camera), !help')
+    bot.chat('Commands: !speed <ms> (set attack interval), !help')
   }
 }
 
