@@ -376,6 +376,7 @@ async function taskAttackLoop (t) {
 /**
  * Raw left-click loop without targeting logic
  * Just performs continuous left-clicks at specified interval
+ * WARNING: Does NOT change pitch/yaw - uses current camera direction only
  */
 async function taskLeftClickLoop (t) {
   const everyMs = t.everyMs ?? CFG.leftClickEveryMs
@@ -384,9 +385,14 @@ async function taskLeftClickLoop (t) {
   setManagedInterval(() => {
     try {
       bot.swingArm('right')
-      bot.dig()
+      
+      // Get block in the direction bot is currently looking - does not change orientation
+      const blockAtCursor = bot.blockAtCursor(256)
+      if (blockAtCursor) {
+        bot.dig(blockAtCursor, 'ignore')
+      }
     } catch (e) {
-      console.log('⚠️ Left-click error:', e?.message || e)
+      // Silently ignore errors (no block, etc.)
     }
   }, everyMs)
 
