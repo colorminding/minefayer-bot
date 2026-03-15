@@ -34,7 +34,7 @@ async function startBot () {
     }
 
     // Create authflow for Microsoft login
-    const authflow = new Authflow(CFG.email, CFG.profilesDir)
+    const authflow = new Authflow(CFG.email, CFG.profilesDir, { relyingParty: 'Java' })
     const { accessToken, selectedProfile } = await authflow.getAccessToken()
 
     console.log(`✅ Authenticated as ${selectedProfile.name}`)
