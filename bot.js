@@ -58,13 +58,17 @@ function startActions () {
   if (drinkInterval) clearInterval(drinkInterval)
   if (attackInterval) clearInterval(attackInterval)
 
-  // Continuously drink from offhand (rightclick) - use mineflayer's built-in method
+  // Look 90 degrees to the right and maintain that angle
   drinkInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
+      // Maintain look angle (90° right, 0° up)
+      bot.look(Math.PI / 2, 0)
       // Use the off-hand item (potion)
-      bot.activateItem(false)
-    } catch (e) {}
+      bot.activateItem()
+    } catch (e) {
+      console.log('Drink error:', e.message)
+    }
   }, 50)
 
   // Attack nearby armor stands every 550ms (scales with Carpet tick sprints)
