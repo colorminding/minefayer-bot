@@ -13,6 +13,7 @@
  * ATTACK_FOV=0.92
  * ATTACK_EVERY_MS=600
  * ATTACK_TYPES=mob (or: mob,player)  // usually keep "mob"
+ * LEFTCLICK_EVERY_MS=600  // raw left-click interval
  */
 require('dotenv').config()
 const fs = require('fs')
@@ -24,7 +25,7 @@ const { Vec3 } = require('vec3')
 /* ===================== CONFIG ===================== */
 const CFG = {
   host: process.env.MC_HOST || 'server.colorminding.de',
-  port: Number(process.env.MC_PORT || 25565),
+  port: Number(process.env.MC_PORT || 25566),
   version: process.env.MC_VERSION || '1.21.1',
   username: process.env.MC_USER || 'email@example.com',
   auth: process.env.MC_AUTH || 'microsoft',
@@ -41,7 +42,9 @@ const CFG = {
   // 1.0 = exactly forward, 0.0 = 90° to the side; 0.92 is fairly strict
   attackFovDot: Number(process.env.ATTACK_FOV || 0.92),
   attackEveryMs: Number(process.env.ATTACK_EVERY_MS || 600),
-  attackTypes: (process.env.ATTACK_TYPES || 'mob').split(',').map(s => s.trim()).filter(Boolean)
+  attackTypes: (process.env.ATTACK_TYPES || 'mob').split(',').map(s => s.trim()).filter(Boolean),
+
+  leftClickEveryMs: Number(process.env.LEFTCLICK_EVERY_MS || 600)
 }
 
 const STATE_FILE = path.join(__dirname, 'state.json')
@@ -149,6 +152,7 @@ async function executeTask (task) {
     case 'goto': return await taskGoto(task)
     case 'follow': return await taskFollow(task)
     case 'rightClickItem': return await taskRightClickItem(task)
+    case 'leftClickLoop': return await taskLeftClickLoop(task)
     case 'rightClickBlock': return await taskRightClickBlock(task)
     case 'attackLoop': return await taskAttackLoop(task)
     case 'afk': return await taskAfk(task)
@@ -366,7 +370,28 @@ async function taskAttackLoop (t) {
     } catch {}
   }, everyMs)
 
+ 
+
+/**
+ * Raw left-click loop without targeting logic
+ * Just performs continuous left-clicks at specified interval
+ */
+async function taskLeftClickLoop (t) {
+  const everyMs = t.everyMs ?? CFG.leftClickEveryMs
+  console.log(`🔨 Raw left-click loop (every ${everyMs}ms)…`)
+
+  setManagedInterval(() => {
+    try {
+      bot.swingArm('right')
+      bot.dig()
+    } catch (e) {
+      console.log('⚠lc-raw [interval_ms]  (raw left-click loop)`,
+      `${CFG.prefix}️ Left-click error:', e?.message || e)
+    }
+  }, everyMs)
+
   await new Promise(() => {})
+} await new Promise(() => {})
 }
 
 /* ===================== CHAT COMMANDS ===================== */
@@ -440,8 +465,20 @@ function onChat (username, message) {
       pushTask({ type: 'rightClickItem', everyMs: 250, times: 0 })
       bot.chat('🖱️ Right-click ITEM loop ON.')
       return
+    }lc-raw') {
+      const interval = args[0] ? Number(args[0]) : CFG.leftClickEveryMs
+      if (isNaN(interval) || interval < 50) {
+        bot.chat(`Invalid interval. Use ${CFG.prefix}lc-raw [interval_ms >= 50]`)
+        return
+      }
+      stopTasks()
+      pushTask({ type: 'leftClickLoop', everyMs: interval })
+      bot.chat(`🔨 Raw left-click loop ON (every ${interval}ms).`)
+      return
     }
 
+    if (cmd === 'attackcfg') {
+      bot.chat(`⚙️ attackRange=${CFG.attackRange} fovDot=${CFG.attackFovDot} everyMs=${CFG.attackEveryMs} leftClickMs=${CFG.leftClickEveryMs
     if (cmd === 'rcblock') {
       const [x, y, z] = args
       if ([x, y, z].some(v => v === undefined)) {
