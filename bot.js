@@ -115,8 +115,6 @@ function startAttacking () {
   holdInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
-      const elapsed = Date.now() - startTime
-      console.log(`[${elapsed}ms] 🖱️  activateItem() - before angle: [${Math.round(bot.entity.yaw * 100) / 100}, ${Math.round(bot.entity.pitch * 100) / 100}]`)
       bot.activateItem()
     } catch (e) {}
   }, 50)
