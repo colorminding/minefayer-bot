@@ -370,7 +370,8 @@ async function taskAttackLoop (t) {
     } catch {}
   }, everyMs)
 
- 
+  await new Promise(() => {})
+}
 
 /**
  * Raw left-click loop without targeting logic
@@ -405,6 +406,7 @@ function chatHelp () {
       `${CFG.prefix}rc  (right-click item loop)`,
       `${CFG.prefix}rcblock <x> <y> <z>  (right-click block loop)`,
       `${CFG.prefix}lc  (attack loop, safe targeting)`,
+      `${CFG.prefix}lc-raw [interval_ms]  (raw left-click loop)`,
       `${CFG.prefix}attackcfg  (prints current attack settings)`
     ].join(' | ')
   )
@@ -463,20 +465,8 @@ function onChat (username, message) {
       pushTask({ type: 'rightClickItem', everyMs: 250, times: 0 })
       bot.chat('🖱️ Right-click ITEM loop ON.')
       return
-    }lc-raw') {
-      const interval = args[0] ? Number(args[0]) : CFG.leftClickEveryMs
-      if (isNaN(interval) || interval < 50) {
-        bot.chat(`Invalid interval. Use ${CFG.prefix}lc-raw [interval_ms >= 50]`)
-        return
-      }
-      stopTasks()
-      pushTask({ type: 'leftClickLoop', everyMs: interval })
-      bot.chat(`🔨 Raw left-click loop ON (every ${interval}ms).`)
-      return
     }
 
-    if (cmd === 'attackcfg') {
-      bot.chat(`⚙️ attackRange=${CFG.attackRange} fovDot=${CFG.attackFovDot} everyMs=${CFG.attackEveryMs} leftClickMs=${CFG.leftClickEveryMs
     if (cmd === 'rcblock') {
       const [x, y, z] = args
       if ([x, y, z].some(v => v === undefined)) {
@@ -496,8 +486,20 @@ function onChat (username, message) {
       return
     }
 
+    if (cmd === 'lc-raw') {
+      const interval = args[0] ? Number(args[0]) : CFG.leftClickEveryMs
+      if (isNaN(interval) || interval < 50) {
+        bot.chat(`Invalid interval. Use ${CFG.prefix}lc-raw [interval_ms >= 50]`)
+        return
+      }
+      stopTasks()
+      pushTask({ type: 'leftClickLoop', everyMs: interval })
+      bot.chat(`🔨 Raw left-click loop ON (every ${interval}ms).`)
+      return
+    }
+
     if (cmd === 'attackcfg') {
-      bot.chat(`⚙️ attackRange=${CFG.attackRange} fovDot=${CFG.attackFovDot} everyMs=${CFG.attackEveryMs} types=${CFG.attackTypes.join(',')}`)
+      bot.chat(`⚙️ attackRange=${CFG.attackRange} fovDot=${CFG.attackFovDot} everyMs=${CFG.attackEveryMs} leftClickMs=${CFG.leftClickEveryMs}`)
       return
     }
 
