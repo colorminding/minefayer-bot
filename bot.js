@@ -18,16 +18,12 @@ const CFG = {
   
   attackIntervalMs: Number(process.env.ATTACK_INTERVAL_MS || 2000),
   
-  // Fixed camera angles
-  yaw: 74.1,
-  pitch: 136.2,
-  
   exitOnDisconnect: (process.env.EXIT_ON_DISCONNECT || '1') === '1'
 }
 
 let bot = null
 let attackInterval = null
-let cameraLockInterval = null
+let hadBadOmen = false
 
 function startBot () {
   console.log('🟦 Starting bot…')
@@ -43,6 +39,25 @@ function startBot () {
 
   bot.once('spawn', () => {
     console.log('✅ Bot joined.')
+    
+    // Monitor for bad omen effect loss and drink potion
+    const effectCheckInterval = setInterval(() => {
+      try {
+        if (!bot || !bot.entity) return
+        
+        const badOmenEffect = bot.entity.effects[31] // Bad Omen effect ID
+        const hasBadOmen = badOmenEffect !== undefined
+        
+        // If bot had bad omen but now doesn't, drink potion
+        if (hadBadOmen && !hasBadOmen) {
+          console.log('🍺 Bad omen lost! Drinking potion from off-hand...')
+          bot.activateItem()
+        }
+        
+        hadBadOmen = hasBadOmen
+      } catch (e) {}
+    }, 100)
+    
     startAttacking()
   })
 
@@ -52,7 +67,6 @@ function startBot () {
   bot.on('end', () => {
     console.log('🔌 Disconnected.')
     if (attackInterval) clearInterval(attackInterval)
-    if (cameraLockInterval) clearInterval(cameraLockInterval)
     
     if (CFG.exitOnDisconnect) {
       process.exit(1)
@@ -64,15 +78,6 @@ function startBot () {
 
 function startAttacking () {
   if (attackInterval) clearInterval(attackInterval)
-  if (cameraLockInterval) clearInterval(cameraLockInterval)
-  
-  // Camera lock: refresh every 50ms to maintain angle
-  cameraLockInterval = setInterval(() => {
-    try {
-      if (!bot || !bot.entity) return
-      bot.look(CFG.yaw, CFG.pitch, false)
-    } catch (e) {}
-  }, 50)
   
   // Attack loop: find nearest entity and attack it
   attackInterval = setInterval(() => {
@@ -98,6 +103,10 @@ function startAttacking () {
         bot.attack(target)
       }
     } catch (e) {}
+  }, CFG.attackIntervalMs)
+}
+
+startBot()
   }, CFG.attackIntervalMs)
 }
 
