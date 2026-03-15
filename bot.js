@@ -37,7 +37,8 @@ function startBot () {
   })
 
   bot.once('spawn', () => {
-    console.log('✅ Bot joined. Auto-attacking at crit speed.')
+    console.log('✅ Bot joined. Auto-attacking at', CFG.attackIntervalMs + 'ms')
+    bot.on('chat', onChat)
     startAutoAttack()
   })
 
@@ -74,6 +75,35 @@ function startAutoAttack () {
       // Silently ignore
     }
   }, CFG.attackIntervalMs)
+}
+
+function onChat (username, message) {
+  if (username === bot.username) return
+  
+  const parts = message.trim().split(/\s+/)
+  const cmd = parts[0].toLowerCase()
+  const arg = parts[1]
+  
+  if (cmd === '!speed' || cmd === '!attack') {
+    if (!arg || isNaN(arg)) {
+      bot.chat(`Current attack interval: ${CFG.attackIntervalMs}ms. Usage: !speed <ms>`)
+      return
+    }
+    
+    const newInterval = Number(arg)
+    if (newInterval < 50 || newInterval > 10000) {
+      bot.chat('Invalid interval. Range: 50-10000ms')
+      return
+    }
+    
+    CFG.attackIntervalMs = newInterval
+    startAutoAttack()
+    bot.chat(`⚔️ Attack speed set to ${newInterval}ms`)
+  }
+  
+  if (cmd === '!help') {
+    bot.chat('Commands: !speed <ms> (set attack interval), !help')
+  }
 }
 
 startBot()
