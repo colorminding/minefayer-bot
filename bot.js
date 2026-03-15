@@ -38,6 +38,7 @@ function startBot () {
 
   client.on('error', (err) => {
     console.log('⚠️ Error:', err.message)
+    console.log('⚠️ Full error:', err)
   })
 
   client.on('end', () => {
@@ -49,6 +50,10 @@ function startBot () {
 
   client.on('kick_disconnect', (reason) => {
     console.log('⛔ Kicked:', reason)
+  })
+
+  client.on('disconnect', (packet) => {
+    console.log('📴 Disconnect packet:', packet.reason)
   })
 }
 
