@@ -59,11 +59,16 @@ function startActions () {
   if (drinkInterval) clearInterval(drinkInterval)
   if (attackInterval) clearInterval(attackInterval)
 
-  // Continuously drink from offhand (rightclick)
+  // Continuously drink from offhand (rightclick) - use raw packet to avoid angle reset
   drinkInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
-      bot.activateItem()
+      // Send block_place packet directly (1 = off-hand)
+      bot._client.write('block_place', {
+        location: { x: 0, y: 0, z: 0 },
+        direction: 0,
+        hand: 1
+      })
     } catch (e) {}
   }, 50)
 
