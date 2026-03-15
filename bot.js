@@ -64,6 +64,12 @@ function startAutoAttack () {
     try {
       if (!bot || !bot.entity) return
       
+      // Hold rightclick
+      bot.activateItem(false)
+      
+      // Keep fixed pitch and yaw
+      bot.look(136.2, 74.1, false)
+      
       bot.swingArm('right')
       
       // Attack entity at cursor (no block destruction, no targeting)
