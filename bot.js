@@ -18,6 +18,10 @@ const CFG = {
   // Attack interval: 625ms is max sword speed, but add buffer for sweeping edge (650ms+ recommended)
   attackIntervalMs: 650,
   
+  // Camera angles (yaw, pitch)
+  yaw: 74.1,
+  pitch: 136.2,
+  
   exitOnDisconnect: (process.env.EXIT_ON_DISCONNECT || '1') === '1'
 }
 
@@ -60,15 +64,15 @@ function startBot () {
 function startAutoAttack () {
   if (attackInterval) clearInterval(attackInterval)
   
+  // Set camera angle once at start
+  bot.look(CFG.yaw, CFG.pitch, true)
+  
   attackInterval = setInterval(() => {
     try {
       if (!bot || !bot.entity) return
       
       // Hold rightclick
       bot.activateItem(false)
-      
-      // Keep fixed pitch and yaw
-      bot.look(136.2, 74.1, false)
       
       bot.swingArm('right')
       
@@ -88,15 +92,16 @@ function onChat (username, message) {
   
   const parts = message.trim().split(/\s+/)
   const cmd = parts[0].toLowerCase()
-  const arg = parts[1]
+  const arg1 = parts[1]
+  const arg2 = parts[2]
   
   if (cmd === '!speed' || cmd === '!attack') {
-    if (!arg || isNaN(arg)) {
+    if (!arg1 || isNaN(arg1)) {
       bot.chat(`Current attack interval: ${CFG.attackIntervalMs}ms. Usage: !speed <ms>`)
       return
     }
     
-    const newInterval = Number(arg)
+    const newInterval = Number(arg1)
     if (newInterval < 50 || newInterval > 10000) {
       bot.chat('Invalid interval. Range: 50-10000ms')
       return
@@ -107,8 +112,20 @@ function onChat (username, message) {
     bot.chat(`⚔️ Attack speed set to ${newInterval}ms`)
   }
   
+  if (cmd === '!angle' || cmd === '!look') {
+    if (!arg1 || !arg2 || isNaN(arg1) || isNaN(arg2)) {
+      bot.chat(`Current angles - Yaw: ${CFG.yaw}, Pitch: ${CFG.pitch}. Usage: !angle <yaw> <pitch>`)
+      return
+    }
+    
+    CFG.yaw = Number(arg1)
+    CFG.pitch = Number(arg2)
+    bot.look(CFG.yaw, CFG.pitch, true)
+    bot.chat(`👀 Camera set to Yaw: ${CFG.yaw}, Pitch: ${CFG.pitch}`)
+  }
+  
   if (cmd === '!help') {
-    bot.chat('Commands: !speed <ms> (set attack interval), !help')
+    bot.chat('Commands: !speed <ms> (set attack interval), !angle <yaw> <pitch> (set camera), !help')
   }
 }
 
