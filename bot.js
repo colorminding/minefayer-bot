@@ -15,8 +15,8 @@ const CFG = {
   auth: process.env.MC_AUTH || 'microsoft',
   profilesFolder: process.env.PROFILES_DIR || './profiles',
   
-  // Crit speed: sword attack speed = 1.6 attacks/sec = 625ms per attack
-  critSpeedMs: 625,
+  // Attack interval: 625ms is max sword speed, but add buffer for sweeping edge (650ms+ recommended)
+  attackIntervalMs: 650,
   
   exitOnDisconnect: (process.env.EXIT_ON_DISCONNECT || '1') === '1'
 }
@@ -73,7 +73,7 @@ function startAutoAttack () {
     } catch (e) {
       // Silently ignore
     }
-  }, CFG.critSpeedMs)
+  }, CFG.attackIntervalMs)
 }
 
 startBot()
