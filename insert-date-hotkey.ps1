@@ -24,7 +24,7 @@ public static class NativeMethods
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
-    [DllImport("user32.dll")]
+    [DllImport("user32.dll", SetLastError = true)]
     public static extern sbyte GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
 }
 "@
@@ -47,7 +47,11 @@ try {
     while ($true) {
         $msg = New-Object NativeMethods+MSG
         $result = [NativeMethods]::GetMessage([ref]$msg, [IntPtr]::Zero, 0, 0)
-        if ($result -le 0) { break }
+        if ($result -eq -1) {
+            $errorCode = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+            throw "GetMessage failed with Win32 error code $errorCode."
+        }
+        if ($result -eq 0) { break }
 
         if ($msg.message -eq $wmHotkey -and $msg.wParam.ToUInt32() -eq $hotkeyId) {
             $today = (Get-Date).ToString('dd.MM.yyyy')
