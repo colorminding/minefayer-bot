@@ -60,6 +60,12 @@ public static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern short GetAsyncKeyState(int vKey);
+
+    [DllImport("user32.dll")]
+    public static extern bool TranslateMessage(ref MSG lpMsg);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr DispatchMessage(ref MSG lpMsg);
 }
 "@
 
@@ -146,6 +152,9 @@ try {
             $today = (Get-Date).ToString('dd.MM.yyyy')
             Send-LiteralText -Text $today
         }
+
+        [void][NativeMethods]::TranslateMessage([ref]$msg)
+        [void][NativeMethods]::DispatchMessage([ref]$msg)
     }
 }
 finally {
