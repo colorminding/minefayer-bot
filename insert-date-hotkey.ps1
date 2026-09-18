@@ -9,6 +9,7 @@ public static class NativeMethods
     public const uint INPUT_KEYBOARD = 1;
     public const uint KEYEVENTF_KEYUP = 0x0002;
     public const uint KEYEVENTF_UNICODE = 0x0004;
+    public const uint PM_REMOVE = 0x0001;
 
     [StructLayout(LayoutKind.Sequential)]
     public struct MSG
@@ -60,6 +61,9 @@ public static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern short GetAsyncKeyState(int vKey);
+
+    [DllImport("user32.dll")]
+    public static extern bool PeekMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
 }
 "@
 
@@ -137,6 +141,12 @@ try {
 
             $today = (Get-Date).ToString('dd.MM.yyyy')
             Send-LiteralText -Text $today
+
+            while ($true) {
+                $pendingMessage = New-Object NativeMethods+MSG
+                $removed = [NativeMethods]::PeekMessage([ref]$pendingMessage, [IntPtr]::Zero, $wmHotkey, $wmHotkey, [NativeMethods]::PM_REMOVE)
+                if (-not $removed) { break }
+            }
         }
     }
 }
