@@ -133,15 +133,15 @@ try {
         if ($result -eq 0) { break }
 
         if ($msg.message -eq $wmHotkey -and $msg.wParam.ToUInt32() -eq $hotkeyId) {
+            while (([NativeMethods]::GetAsyncKeyState($vkInsert) -band 0x8000) -ne 0) {
+                Start-Sleep -Milliseconds 10
+            }
+
             $now = Get-Date
             if (($now - $lastHotkeyAt).TotalMilliseconds -lt $repeatSuppressMs) {
                 continue
             }
             $lastHotkeyAt = $now
-
-            while (([NativeMethods]::GetAsyncKeyState($vkInsert) -band 0x8000) -ne 0) {
-                Start-Sleep -Milliseconds 10
-            }
 
             $today = (Get-Date).ToString('dd.MM.yyyy')
             Send-LiteralText -Text $today
