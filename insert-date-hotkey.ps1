@@ -73,6 +73,7 @@ public static class NativeMethods
 $hotkeyId = 1
 $vkInsert = 0x2D
 $wmHotkey = 0x0312
+$dateCulture = [System.Globalization.CultureInfo]::InvariantCulture
 
 $registered = [NativeMethods]::RegisterHotKey([IntPtr]::Zero, $hotkeyId, 0, $vkInsert)
 if (-not $registered) {
@@ -163,7 +164,7 @@ try {
                 }
 
                 if ($shouldInsertDate) {
-                    $today = (Get-Date).ToString('dd.MM.yyyy')
+                    $today = (Get-Date).ToString('dd.MM.yyyy', $dateCulture)
                     Send-LiteralText -Text $today
                 }
             }
