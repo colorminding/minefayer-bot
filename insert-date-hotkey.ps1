@@ -9,6 +9,7 @@ public static class NativeMethods
     public const uint INPUT_KEYBOARD = 1;
     public const uint KEYEVENTF_KEYUP = 0x0002;
     public const uint KEYEVENTF_UNICODE = 0x0004;
+    public const uint PM_REMOVE = 0x0001;
 
     [StructLayout(LayoutKind.Sequential)]
     public struct MSG
@@ -53,13 +54,13 @@ public static class NativeMethods
     public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern int GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
-
-    [DllImport("user32.dll", SetLastError = true)]
     public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
     [DllImport("user32.dll")]
     public static extern short GetAsyncKeyState(int vKey);
+
+    [DllImport("user32.dll")]
+    public static extern bool PeekMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
 
     [DllImport("user32.dll")]
     public static extern bool TranslateMessage(ref MSG lpMsg);
@@ -72,6 +73,7 @@ public static class NativeMethods
 $hotkeyId = 1
 $vkInsert = 0x2D
 $wmHotkey = 0x0312
+$wmQuit = 0x0012
 $repeatSuppressMs = 250
 $lastHotkeyAt = [DateTime]::MinValue
 
@@ -129,32 +131,48 @@ Write-Host "Running. Press Insert to insert today's date as dd.MM.yyyy."
 Write-Host "Close this window to stop the script."
 
 try {
+    $insertDownProcessed = $false
+    $shouldExit = $false
+
     while ($true) {
-        $msg = New-Object NativeMethods+MSG
-        $result = [NativeMethods]::GetMessage([ref]$msg, [IntPtr]::Zero, 0, 0)
-        if ($result -eq -1) {
-            $errorCode = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
-            throw "GetMessage failed with Win32 error code $errorCode."
-        }
-        if ($result -eq 0) { break }
+        while ($true) {
+            $msg = New-Object NativeMethods+MSG
+            $hasMessage = [NativeMethods]::PeekMessage([ref]$msg, [IntPtr]::Zero, 0, 0, [NativeMethods]::PM_REMOVE)
+            if (-not $hasMessage) { break }
 
-        if ($msg.message -eq $wmHotkey -and ([int64]$msg.wParam) -eq $hotkeyId) {
-            while (([NativeMethods]::GetAsyncKeyState($vkInsert) -band 0x8000) -ne 0) {
-                Start-Sleep -Milliseconds 10
+            $insertKeyDown = (([NativeMethods]::GetAsyncKeyState($vkInsert) -band 0x8000) -ne 0)
+            if (-not $insertKeyDown) {
+                $insertDownProcessed = $false
             }
 
-            $now = Get-Date
-            if (($now - $lastHotkeyAt).TotalMilliseconds -lt $repeatSuppressMs) {
-                continue
+            if ($msg.message -eq $wmQuit) {
+                $shouldExit = $true
+                break
             }
-            $lastHotkeyAt = $now
 
-            $today = (Get-Date).ToString('dd.MM.yyyy')
-            Send-LiteralText -Text $today
+            if ($msg.message -eq $wmHotkey -and ([int64]$msg.wParam) -eq $hotkeyId) {
+                if ($insertDownProcessed) {
+                    continue
+                }
+
+                $now = Get-Date
+                if (($now - $lastHotkeyAt).TotalMilliseconds -lt $repeatSuppressMs) {
+                    continue
+                }
+
+                $insertDownProcessed = $true
+                $lastHotkeyAt = $now
+
+                $today = (Get-Date).ToString('dd.MM.yyyy')
+                Send-LiteralText -Text $today
+            }
+
+            [void][NativeMethods]::TranslateMessage([ref]$msg)
+            [void][NativeMethods]::DispatchMessage([ref]$msg)
         }
 
-        [void][NativeMethods]::TranslateMessage([ref]$msg)
-        [void][NativeMethods]::DispatchMessage([ref]$msg)
+        if ($shouldExit) { break }
+        Start-Sleep -Milliseconds 10
     }
 }
 finally {
