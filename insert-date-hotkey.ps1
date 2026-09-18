@@ -53,10 +53,13 @@ public static class NativeMethods
     public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern sbyte GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
+    public static extern int GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+    [DllImport("user32.dll")]
+    public static extern short GetAsyncKeyState(int vKey);
 }
 "@
 
@@ -128,6 +131,10 @@ try {
         if ($result -eq 0) { break }
 
         if ($msg.message -eq $wmHotkey -and $msg.wParam.ToUInt32() -eq $hotkeyId) {
+            while (([NativeMethods]::GetAsyncKeyState($vkInsert) -band 0x8000) -ne 0) {
+                Start-Sleep -Milliseconds 10
+            }
+
             $today = (Get-Date).ToString('dd.MM.yyyy')
             Send-LiteralText -Text $today
         }
