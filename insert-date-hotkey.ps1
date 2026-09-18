@@ -149,20 +149,25 @@ try {
             }
 
             if ($msg.message -eq $wmHotkey -and ([int64]$msg.wParam) -eq $hotkeyId) {
+                $shouldInsertDate = $true
                 if ($insertDownProcessed) {
-                    continue
+                    $shouldInsertDate = $false
+                }
+                else {
+                    $now = Get-Date
+                    if (($now - $lastHotkeyAt).TotalMilliseconds -lt $repeatSuppressMs) {
+                        $shouldInsertDate = $false
+                    }
+                    else {
+                        $insertDownProcessed = $true
+                        $lastHotkeyAt = $now
+                    }
                 }
 
-                $now = Get-Date
-                if (($now - $lastHotkeyAt).TotalMilliseconds -lt $repeatSuppressMs) {
-                    continue
+                if ($shouldInsertDate) {
+                    $today = (Get-Date).ToString('dd.MM.yyyy')
+                    Send-LiteralText -Text $today
                 }
-
-                $insertDownProcessed = $true
-                $lastHotkeyAt = $now
-
-                $today = (Get-Date).ToString('dd.MM.yyyy')
-                Send-LiteralText -Text $today
             }
 
             [void][NativeMethods]::TranslateMessage([ref]$msg)
