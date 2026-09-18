@@ -73,7 +73,6 @@ public static class NativeMethods
 $hotkeyId = 1
 $vkInsert = 0x2D
 $wmHotkey = 0x0312
-$wmQuit = 0x0012
 $repeatSuppressMs = 250
 $lastHotkeyAt = [DateTime]::MinValue
 
@@ -132,7 +131,6 @@ Write-Host "Close this window to stop the script."
 
 try {
     $insertDownProcessed = $false
-    $shouldExit = $false
 
     while ($true) {
         $insertKeyDown = (([NativeMethods]::GetAsyncKeyState($vkInsert) -band 0x8000) -ne 0)
@@ -148,11 +146,6 @@ try {
             $insertKeyDown = (([NativeMethods]::GetAsyncKeyState($vkInsert) -band 0x8000) -ne 0)
             if (-not $insertKeyDown) {
                 $insertDownProcessed = $false
-            }
-
-            if ($msg.message -eq $wmQuit) {
-                $shouldExit = $true
-                break
             }
 
             if ($msg.message -eq $wmHotkey -and ([int64]$msg.wParam) -eq $hotkeyId) {
@@ -176,7 +169,6 @@ try {
             [void][NativeMethods]::DispatchMessage([ref]$msg)
         }
 
-        if ($shouldExit) { break }
         Start-Sleep -Milliseconds 10
     }
 }
