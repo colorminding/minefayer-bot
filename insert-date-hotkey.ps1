@@ -119,7 +119,7 @@ function Send-LiteralText {
     }
 }
 
-Write-Host "Running. Press Insert to insert today's date as DD.MM.YYYY."
+Write-Host "Running. Press Insert to insert today's date as dd.MM.yyyy."
 Write-Host "Close this window to stop the script."
 
 try {
