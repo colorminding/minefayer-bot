@@ -9,8 +9,6 @@ public static class NativeMethods
     public const uint INPUT_KEYBOARD = 1;
     public const uint KEYEVENTF_KEYUP = 0x0002;
     public const uint KEYEVENTF_UNICODE = 0x0004;
-    public const uint PM_NOREMOVE = 0x0000;
-    public const uint PM_REMOVE = 0x0001;
 
     [StructLayout(LayoutKind.Sequential)]
     public struct MSG
@@ -62,15 +60,14 @@ public static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern short GetAsyncKeyState(int vKey);
-
-    [DllImport("user32.dll")]
-    public static extern bool PeekMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
 }
 "@
 
 $hotkeyId = 1
 $vkInsert = 0x2D
 $wmHotkey = 0x0312
+$repeatSuppressMs = 250
+$lastHotkeyAt = [DateTime]::MinValue
 
 $registered = [NativeMethods]::RegisterHotKey([IntPtr]::Zero, $hotkeyId, 0, $vkInsert)
 if (-not $registered) {
@@ -136,17 +133,14 @@ try {
         if ($result -eq 0) { break }
 
         if ($msg.message -eq $wmHotkey -and $msg.wParam.ToUInt32() -eq $hotkeyId) {
+            $now = Get-Date
+            if (($now - $lastHotkeyAt).TotalMilliseconds -lt $repeatSuppressMs) {
+                continue
+            }
+            $lastHotkeyAt = $now
+
             while (([NativeMethods]::GetAsyncKeyState($vkInsert) -band 0x8000) -ne 0) {
                 Start-Sleep -Milliseconds 10
-            }
-
-            while ($true) {
-                $pendingMessage = New-Object NativeMethods+MSG
-                $peeked = [NativeMethods]::PeekMessage([ref]$pendingMessage, [IntPtr]::Zero, $wmHotkey, $wmHotkey, [NativeMethods]::PM_NOREMOVE)
-                if (-not $peeked) { break }
-                if ($pendingMessage.wParam.ToUInt32() -ne $hotkeyId) { break }
-
-                [void][NativeMethods]::PeekMessage([ref]$pendingMessage, [IntPtr]::Zero, $wmHotkey, $wmHotkey, [NativeMethods]::PM_REMOVE)
             }
 
             $today = (Get-Date).ToString('dd.MM.yyyy')
