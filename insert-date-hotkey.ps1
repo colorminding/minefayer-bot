@@ -51,7 +51,8 @@ try {
 
         if ($msg.message -eq $wmHotkey -and $msg.wParam.ToUInt32() -eq $hotkeyId) {
             $today = (Get-Date).ToString('dd.MM.yyyy')
-            $wshell.SendKeys($today)
+            $safeToday = $today -replace '([+^%~(){}\[\]])', '{$1}'
+            $wshell.SendKeys($safeToday)
         }
     }
 }
