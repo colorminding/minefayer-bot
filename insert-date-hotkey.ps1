@@ -147,8 +147,15 @@ try {
             }
 
             if ($msg.message -eq $wmHotkey -and ([int64]$msg.wParam) -eq $hotkeyId) {
+                $hotkeyData = [int64]$msg.lParam
+                $hotkeyModifiers = $hotkeyData -band 0xFFFF
+                $hotkeyVirtualKey = ($hotkeyData -shr 16) -band 0xFFFF
+
                 $shouldInsertDate = $true
-                if ($insertDownProcessed) {
+                if ($hotkeyModifiers -ne 0 -or $hotkeyVirtualKey -ne $vkInsert) {
+                    $shouldInsertDate = $false
+                }
+                elseif ($insertDownProcessed) {
                     $shouldInsertDate = $false
                 }
                 else {
