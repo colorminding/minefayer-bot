@@ -73,8 +73,6 @@ public static class NativeMethods
 $hotkeyId = 1
 $vkInsert = 0x2D
 $wmHotkey = 0x0312
-$repeatSuppressMs = 250
-$lastHotkeyAt = [DateTime]::MinValue
 
 $registered = [NativeMethods]::RegisterHotKey([IntPtr]::Zero, $hotkeyId, 0, $vkInsert)
 if (-not $registered) {
@@ -154,14 +152,7 @@ try {
                     $shouldInsertDate = $false
                 }
                 else {
-                    $now = Get-Date
-                    if (($now - $lastHotkeyAt).TotalMilliseconds -lt $repeatSuppressMs) {
-                        $shouldInsertDate = $false
-                    }
-                    else {
-                        $insertDownProcessed = $true
-                        $lastHotkeyAt = $now
-                    }
+                    $insertDownProcessed = $true
                 }
 
                 if ($shouldInsertDate) {
