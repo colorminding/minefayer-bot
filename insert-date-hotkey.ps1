@@ -170,8 +170,10 @@ try {
                 }
             }
 
-            [void][NativeMethods]::TranslateMessage([ref]$msg)
-            [void][NativeMethods]::DispatchMessage([ref]$msg)
+            if ($msg.hwnd -ne [IntPtr]::Zero) {
+                [void][NativeMethods]::TranslateMessage([ref]$msg)
+                [void][NativeMethods]::DispatchMessage([ref]$msg)
+            }
         }
 
         Start-Sleep -Milliseconds 10
