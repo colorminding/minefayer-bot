@@ -135,9 +135,14 @@ try {
     $shouldExit = $false
 
     while ($true) {
+        $insertKeyDown = (([NativeMethods]::GetAsyncKeyState($vkInsert) -band 0x8000) -ne 0)
+        if (-not $insertKeyDown) {
+            $insertDownProcessed = $false
+        }
+
         while ($true) {
             $msg = New-Object NativeMethods+MSG
-            $hasMessage = [NativeMethods]::PeekMessage([ref]$msg, [IntPtr]::Zero, 0, 0, [NativeMethods]::PM_REMOVE)
+            $hasMessage = [NativeMethods]::PeekMessage([ref]$msg, [IntPtr](-1), 0, 0, [NativeMethods]::PM_REMOVE)
             if (-not $hasMessage) { break }
 
             $insertKeyDown = (([NativeMethods]::GetAsyncKeyState($vkInsert) -band 0x8000) -ne 0)
