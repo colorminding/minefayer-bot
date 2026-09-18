@@ -140,9 +140,6 @@ try {
                 Start-Sleep -Milliseconds 10
             }
 
-            $today = (Get-Date).ToString('dd.MM.yyyy')
-            Send-LiteralText -Text $today
-
             while ($true) {
                 $pendingMessage = New-Object NativeMethods+MSG
                 $peeked = [NativeMethods]::PeekMessage([ref]$pendingMessage, [IntPtr]::Zero, $wmHotkey, $wmHotkey, [NativeMethods]::PM_NOREMOVE)
@@ -151,6 +148,9 @@ try {
 
                 [void][NativeMethods]::PeekMessage([ref]$pendingMessage, [IntPtr]::Zero, $wmHotkey, $wmHotkey, [NativeMethods]::PM_REMOVE)
             }
+
+            $today = (Get-Date).ToString('dd.MM.yyyy')
+            Send-LiteralText -Text $today
         }
     }
 }
