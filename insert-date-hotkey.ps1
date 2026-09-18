@@ -9,6 +9,7 @@ public static class NativeMethods
     public const uint INPUT_KEYBOARD = 1;
     public const uint KEYEVENTF_KEYUP = 0x0002;
     public const uint KEYEVENTF_UNICODE = 0x0004;
+    public const uint PM_NOREMOVE = 0x0000;
     public const uint PM_REMOVE = 0x0001;
 
     [StructLayout(LayoutKind.Sequential)]
@@ -144,8 +145,11 @@ try {
 
             while ($true) {
                 $pendingMessage = New-Object NativeMethods+MSG
-                $removed = [NativeMethods]::PeekMessage([ref]$pendingMessage, [IntPtr]::Zero, $wmHotkey, $wmHotkey, [NativeMethods]::PM_REMOVE)
-                if (-not $removed) { break }
+                $peeked = [NativeMethods]::PeekMessage([ref]$pendingMessage, [IntPtr]::Zero, $wmHotkey, $wmHotkey, [NativeMethods]::PM_NOREMOVE)
+                if (-not $peeked) { break }
+                if ($pendingMessage.wParam.ToUInt32() -ne $hotkeyId) { break }
+
+                [void][NativeMethods]::PeekMessage([ref]$pendingMessage, [IntPtr]::Zero, $wmHotkey, $wmHotkey, [NativeMethods]::PM_REMOVE)
             }
         }
     }
