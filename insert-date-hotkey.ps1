@@ -132,7 +132,7 @@ try {
         }
         if ($result -eq 0) { break }
 
-        if ($msg.message -eq $wmHotkey -and $msg.wParam.ToUInt32() -eq $hotkeyId) {
+        if ($msg.message -eq $wmHotkey -and ([int64]$msg.wParam) -eq $hotkeyId) {
             while (([NativeMethods]::GetAsyncKeyState($vkInsert) -band 0x8000) -ne 0) {
                 Start-Sleep -Milliseconds 10
             }
